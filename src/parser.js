@@ -18,7 +18,7 @@ const elementsAtrributes = {
         { name: 'font-size', type: 'number', default: 1.75 },
         { name: 'color', type: 'string', default: '#ffffff' },
     ],
-    'h2': [
+    'h3': [
         { name: 'weight', type: 'number', default: 600 },
         { name: 'font-size', type: 'number', default: 1.5 },
         { name: 'color', type: 'string', default: '#ffffff' },

@@ -27,7 +27,10 @@ const elementsAtrributes = {
         { name: 'weight', type: 'number', default: 400 },
         { name: 'font-size', type: 'number', default: 1 },
         { name: 'color', type: 'string', default: '#ffffff' },
-    ]
+    ],
+    'img': [
+        { name: 'width', type: 'number', default: 5 },
+    ],
 };
 
 // We keep the names of color attributes here.
@@ -49,12 +52,12 @@ module.exports = {
             const line = fileContent[i].trim();
 
             // Regular expression to capture the element, JSON metadata, and the quoted content, excluding escaped quotes (\" inside content)
-            const regex = /^(\w+)\s+({.*?})\s+"((?:[^"\\]|\\.)*)"$/;
+            const regex = /^(\w+)(?:\s+({.*?}))?\s+"((?:[^"\\]|\\.)*)"$/;
             const match = line.match(regex);
 
             if (match) {
                 const elementIdentifier = match[1]; // e.g., h1, p, etc.
-                let elementMetadata = JSON.parse(match[2]); // Metadata as JSON object
+                let elementMetadata = match[2] ? JSON.parse(match[2]) : {}; // Metadata as JSON object, empty if missing
                 const content = match[3].replace(/\\"/g, '"');; // Content inside quotes
 
                 if (!validateElement(elementIdentifier, elementMetadata)) {
@@ -81,6 +84,11 @@ module.exports = {
 
                     case 'text':
                         fullHTML += `<span style="font-size:${elementMetadata['font-size']}rem;font-weight:${elementMetadata.weight};color:${elementMetadata.color}">${content}</span>`;
+                        break;
+
+                    case 'img':
+                        fullHTML += `<img style="width:${elementMetadata['width']}rem;" src="${content}">`;
+                        break;
 
                     default:
                         break;

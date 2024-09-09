@@ -2,8 +2,8 @@
 // Ver. 1.0.0
 // © 2024 mcjk
 
-const fs = require('fs');
-const colorString = require('color-string');
+import fs from 'node:fs';
+import colorString from 'color-string';
 
 // This object contains elements' possible metadata attributes by their element identifier.
 // It will help with validating the metadata passed and actualy element types.
@@ -36,73 +36,71 @@ const elementsAtrributes = {
 // We keep the names of color attributes here.
 const colorAttributesNames = ['color', 'background-color'];
 
-module.exports = {
-    // This function coverts a .brev file to HTML editor format.
-    brevToHTML: (filePath) => {
-        // Read the .brev file content
-        const fileContent = fs.readFileSync(filePath, 'utf-8').split('\n').filter(Boolean); // filter to remove empty lines
+// This function coverts a .brev file to HTML editor format.
+export function brevToHTML(filePath) {
+    // Read the .brev file content
+    const fileContent = fs.readFileSync(filePath, 'utf-8').split('\n').filter(Boolean); // filter to remove empty lines
 
-        // The first line is the note title
-        const noteTitle = fileContent[0].trim();
+    // The first line is the note title
+    const noteTitle = fileContent[0].trim();
 
-        let fullHTML = '';
+    let fullHTML = '';
 
-        // Process each subsequent line as an element
-        for (let i = 1; i < fileContent.length; i++) {
-            const line = fileContent[i].trim();
+    // Process each subsequent line as an element
+    for (let i = 1; i < fileContent.length; i++) {
+        const line = fileContent[i].trim();
 
-            // Regular expression to capture the element, JSON metadata, and the quoted content, excluding escaped quotes (\" inside content)
-            const regex = /^(\w+)(?:\s+({.*?}))?\s+"((?:[^"\\]|\\.)*)"$/;
-            const match = line.match(regex);
+        // Regular expression to capture the element, JSON metadata, and the quoted content, excluding escaped quotes (\" inside content)
+        const regex = /^(\w+)(?:\s+({.*?}))?\s+"((?:[^"\\]|\\.)*)"$/;
+        const match = line.match(regex);
 
-            if (match) {
-                const elementIdentifier = match[1]; // e.g., h1, p, etc.
-                let elementMetadata = match[2] ? JSON.parse(match[2]) : {}; // Metadata as JSON object, empty if missing
-                const content = match[3].replace(/\\"/g, '"');; // Content inside quotes
+        if (match) {
+            const elementIdentifier = match[1]; // e.g., h1, p, etc.
+            let elementMetadata = match[2] ? JSON.parse(match[2]) : {}; // Metadata as JSON object, empty if missing
+            const content = match[3].replace(/\\"/g, '"');; // Content inside quotes
 
-                if (!validateElement(elementIdentifier, elementMetadata)) {
-                    throw Error('Error, element invalid.');
-                }
-
-                fullHTML += '<div>';
-
-                // Get full element metadata by a function that combains defined and default values.
-                elementMetadata = getFullMetadata(elementIdentifier, elementMetadata);
-
-                switch (elementIdentifier) {
-                    case 'h1':
-                        fullHTML += `<h1 style="font-size:${elementMetadata['font-size']}rem;font-weight:${elementMetadata.weight};color:${elementMetadata.color}">${content}</h1>`;
-                        break;
-
-                    case 'h2':
-                        fullHTML += `<h2 style="font-size:${elementMetadata['font-size']}rem;font-weight:${elementMetadata.weight};color:${elementMetadata.color}">${content}</h2>`;
-                        break;
-
-                    case 'h3':
-                        fullHTML += `<h3 style="font-size:${elementMetadata['font-size']}rem;font-weight:${elementMetadata.weight};color:${elementMetadata.color}">${content}</h3>`;
-                        break;
-
-                    case 'text':
-                        fullHTML += `<span style="font-size:${elementMetadata['font-size']}rem;font-weight:${elementMetadata.weight};color:${elementMetadata.color}">${content}</span>`;
-                        break;
-
-                    case 'img':
-                        fullHTML += `<img style="width:${elementMetadata['width']}rem;" src="${content}">`;
-                        break;
-
-                    default:
-                        break;
-                }
-
-                fullHTML += '</div>';
-            } else {
-                console.error(`Syntax error at line ${i + 1}: "${line}"`);
+            if (!validateElement(elementIdentifier, elementMetadata)) {
+                throw Error('Error, element invalid.');
             }
-        }
 
-        return { title: noteTitle, html: fullHTML };
+            fullHTML += '<div>';
+
+            // Get full element metadata by a function that combains defined and default values.
+            elementMetadata = getFullMetadata(elementIdentifier, elementMetadata);
+
+            switch (elementIdentifier) {
+                case 'h1':
+                    fullHTML += `<h1 style="font-size:${elementMetadata['font-size']}rem;font-weight:${elementMetadata.weight};color:${elementMetadata.color}">${content}</h1>`;
+                    break;
+
+                case 'h2':
+                    fullHTML += `<h2 style="font-size:${elementMetadata['font-size']}rem;font-weight:${elementMetadata.weight};color:${elementMetadata.color}">${content}</h2>`;
+                    break;
+
+                case 'h3':
+                    fullHTML += `<h3 style="font-size:${elementMetadata['font-size']}rem;font-weight:${elementMetadata.weight};color:${elementMetadata.color}">${content}</h3>`;
+                    break;
+
+                case 'text':
+                    fullHTML += `<span style="font-size:${elementMetadata['font-size']}rem;font-weight:${elementMetadata.weight};color:${elementMetadata.color}">${content}</span>`;
+                    break;
+
+                case 'img':
+                    fullHTML += `<img style="width:${elementMetadata['width']}rem;" src="${content}">`;
+                    break;
+
+                default:
+                    break;
+            }
+
+            fullHTML += '</div>';
+        } else {
+            console.error(`Syntax error at line ${i + 1}: "${line}"`);
+        }
     }
-};
+
+    return { title: noteTitle, html: fullHTML };
+}
 
 function validateElement(identifier, metadata) {
     // Try getting the element's possible metadata attributes from the elementsAttributes object.
@@ -133,7 +131,7 @@ function validateElement(identifier, metadata) {
     // Check whether the passed metadata misses some required attributes.
     for (let i = 0; i < possibleAttributes.length; i++) {
         const attr = possibleAttributes[i];
-        
+
         // If the attribute does not have a default value and it isn't included in the metadata (missing required attribute)
         if (attr['default'] === undefined && metadata[attr.name] === undefined) {
             return false;
